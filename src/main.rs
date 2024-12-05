@@ -1,4 +1,4 @@
-use tetra::graphics::{self, Color, Rectangle, DrawParams, Texture}; //we will use textures
+use tetra::graphics::{Color, Rectangle, DrawParams, Texture}; //we will use textures
 use tetra::input::{self, Key}; //we will take input keys
 use tetra::math::Vec2; //will need 2d vector
 use tetra::window;
