@@ -4,27 +4,29 @@ use tetra::math::Vec2; //will need 2d vector
 use tetra::window;
 use tetra::{Context, ContextBuilder, State}; //Will need context and state of game
 
-
 const WINDOW_WIDTH: f32 = 1280.0;
 const WINDOW_HEIGHT: f32 = 720.0;
 
 const PADDLE_SPEED: f32 = 8.0;
 
 const BALL_SPEED: f32 = 5.0;
-fn main() -> tetra::Result {
+fn main() -> tetra::Result
+{
     ContextBuilder::new("Pong", WINDOW_WIDTH as i32, WINDOW_HEIGHT as i32)
         .quit_on_escape(true)
         .build()?
         .run(GameState::new)
 }
 
-struct Entity {
+struct Entity
+{
     texture: Texture,
     position: Vec2<f32>,
     velocity: Vec2<f32>,
 }
 
-impl Entity {
+impl Entity
+{
     fn new(texture: Texture, position: Vec2<f32>) -> Entity {
         Entity::with_velocity(texture, position, Vec2::zero())
     }
@@ -37,6 +39,23 @@ impl Entity {
             velocity,
         }
     }
+    fn width(&self) -> f32 {
+        self.texture.width() as f32
+    }
+
+    fn height(&self) -> f32 {
+        self.texture.height() as f32
+    }
+
+    fn bounds(&self) -> Rectangle {
+        Rectangle::new(
+            self.position.x,
+            self.position.y,
+            self.width(),
+            self.height(),
+        )
+    }
+
 }
 struct GameState
 {
@@ -58,16 +77,14 @@ impl GameState
 
         let player1_texture = Texture::new(ctx, "./resources/player1.png")?;
         let player1_position = Vec2::new(
-            32.0,
+            8.0,
             (WINDOW_HEIGHT - player1_texture.height() as f32) / 2.0);
 
         let player2_texture = Texture::new(ctx, "./resources/player2.png")?;
         let player2_position = Vec2::new(
-            WINDOW_WIDTH - 16.0,
+            WINDOW_WIDTH - 32.0,
             (WINDOW_HEIGHT - player2_texture.height() as f32) / 2.0,
         );
-
-
 
         Ok(GameState{
             player1: Entity::new(player1_texture, player1_position),
@@ -99,17 +116,34 @@ impl State for GameState
         {
             self.player2.position.y += PADDLE_SPEED;
         }
+
+        let player1_bounds = self.player1.bounds();
+        let player2_bounds = self.player2.bounds();
+        let ball_bounds = self.ball.bounds();
+
+        let paddle_hit = if ball_bounds.intersects(&player1_bounds)
+        {
+            Some(&self.player1)
+        }
+        else if ball_bounds.intersects(&player2_bounds)
+        {
+            Some(&self.player2)
+        }
+        else { None };
+
+        if paddle_hit.is_some()
+        {
+            self.ball.velocity = -self.ball.velocity;
+        }
+
         Ok(())
     }
     fn draw(&mut self, ctx: &mut Context) -> tetra::Result
     {
         tetra::graphics::clear(ctx, Color::rgb(0.392, 0.584, 0.929));
-        let rotation :f32= 90.0;
-        self.player1.texture.draw(ctx, DrawParams::new().position(self.player1.position).rotation(rotation.to_radians()));
-        self.player2.texture.draw(ctx, DrawParams::new().position(self.player2.position).rotation(rotation.to_radians()));
+        self.player1.texture.draw(ctx, DrawParams::new().position(self.player1.position));
+        self.player2.texture.draw(ctx, DrawParams::new().position(self.player2.position));
         self.ball.texture.draw(ctx, self.ball.position);
-
         Ok(())
     }
-
 }
